@@ -179,30 +179,22 @@ router.post('/find', [
             throw new Error('Invalid email address');
           }
         });
-
         return true;
       })
     ], async (req, res) => {
       if (!req.session.userId) {
-        // Redirect unauthenticated requests to home page
         res.redirect('/')
       } else {
-        // Build an object from the form values
         const formData = {
           attendees: req.body['ev-attendees']
         };
-
-        // Check if there are any errors with the form values
         const formErrors = validationResult(req);
         if (!formErrors.isEmpty()) {
-
           let invalidFields = '';
           formErrors.errors.forEach(error => {
             invalidFields += `${error.param.slice(3, error.param.length)},`
           });
 
-          // Preserve the user's input when re-rendering the form
-          // Convert the attendees array back to a string
           formData.attendees = formData.attendees.join(';');
           return res.render('findevent', {
             findEvent: formData,
@@ -210,20 +202,22 @@ router.post('/find', [
           });
         }
 
-        // Get the user
         const user = req.app.locals.users[req.session.userId];
 
-        // Create the event
+        // find events
         try {
           const data= await graph.findMeetings(
               req.app.locals.msalClient,
               req.session.userId,
               formData,
           );
-          return res.redirect('/calendar/find');
+          return res.render('findevent', {
+            findEvent: formData,
+            events: data.data
+          });
         } catch (error) {
           req.flash('error_msg', {
-            message: 'Could not get data',
+            message: 'Could not get data!',
             debug: JSON.stringify(error, Object.getOwnPropertyNames(error))
           });
         }

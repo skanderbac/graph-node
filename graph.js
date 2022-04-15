@@ -29,14 +29,14 @@ module.exports = {
         endDateTime: encodeURIComponent(end)
       })
       // Get just the properties used by the app
-      .select('subject,organizer,start,end')
+      .select('subject,organizer,start,end,attendees')
       // Order by start time
       .orderby('start/dateTime')
       // Get at most 50 results
       .top(50)
       .get();
   },
-  findMeetings: async function(msalClient, userId, formData) {
+  findMeetings: async (msalClient, userId, formData) => {
     const client = getAuthenticatedClient(msalClient, userId);
 
     // Build a Graph event
@@ -46,7 +46,7 @@ module.exports = {
     if (formData.attendees) {
       findEvent.attendees = [];
       formData.attendees.forEach(attendee => {
-        newEvent.attendees.push({
+        findEvent.attendees.push({
           type: 'required',
           emailAddress: {
             address: attendee
@@ -55,8 +55,8 @@ module.exports = {
       });
     }
 
-    // POST /me/events
-    await client
+    // POST /me/findMeetingTimes
+    return  await client
         .api('/me/findMeetingTimes')
         .post(findEvent);
   },

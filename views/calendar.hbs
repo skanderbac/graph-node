@@ -23,9 +23,7 @@
         <td>{{e.subject}}</td>
         <td>{{eventDateTime e.start.dateTime}}</td>
         <td>{{eventDateTime e.end.dateTime}}</td>
-         <script>
-             console.log('test')
-        </script>
+          <td>{{#each e.attendees as | a |}} {{a.emailAddress.address}}| {{a.emailAddress.name}} {{/each}}</td>
       </tr>
     {{/each}}
   </tbody>
