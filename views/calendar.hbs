@@ -1,0 +1,33 @@
+<!-- Copyright (c) Microsoft Corporation.
+     Licensed under the MIT License. -->
+
+<!-- <LayoutSnippet> -->
+<h1 class="mb-3">Calendar</h1>
+<a href="/calendar/new" class="btn btn-light btn-sm mb-3">New event</a>
+<br>
+<a href="/calendar/find" class="btn btn-light btn-sm mb-3">Find event</a>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Organizer</th>
+      <th scope="col">Subject</th>
+      <th scope="col">Start</th>
+      <th scope="col">End</th>
+      <th scope="col">Attendees</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each events as | e |}}
+      <tr>
+        <td>{{e.organizer.emailAddress.name}}</td>
+        <td>{{e.subject}}</td>
+        <td>{{eventDateTime e.start.dateTime}}</td>
+        <td>{{eventDateTime e.end.dateTime}}</td>
+         <script>
+             console.log('test')
+        </script>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+<!-- </LayoutSnippet> -->
