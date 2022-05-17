@@ -5,11 +5,13 @@ const router = require('express-promise-router')();
 const graph = require('../graph');
 
 /* GET auth callback. */
-router.get('/signin', async (req, res) => {
+router.get('/signin',
+  async function (req, res) {
     const urlParameters = {
       scopes: process.env.OAUTH_SCOPES.split(','),
       redirectUri: process.env.OAUTH_REDIRECT_URI
     };
+
     try {
       const authUrl = await req.app.locals
         .msalClient.getAuthCodeUrl(urlParameters);
@@ -27,7 +29,8 @@ router.get('/signin', async (req, res) => {
 );
 
 // <CallbackSnippet>
-router.get('/callback', async (req, res) => {
+router.get('/callback',
+  async function(req, res) {
     const tokenRequest = {
       code: req.query.code,
       scopes: process.env.OAUTH_SCOPES.split(','),
@@ -40,6 +43,7 @@ router.get('/callback', async (req, res) => {
 
       // Save the user's homeAccountId in their session
       req.session.userId = response.account.homeAccountId;
+
       const user = await graph.getUserDetails(
         req.app.locals.msalClient,
         req.session.userId
@@ -63,7 +67,8 @@ router.get('/callback', async (req, res) => {
 );
 // </CallbackSnippet>
 
-router.get('/signout',async (req, res) => {
+router.get('/signout',
+  async function(req, res) {
     // Sign out
     if (req.session.userId) {
       // Look up the user's account in the cache
@@ -82,7 +87,7 @@ router.get('/signout',async (req, res) => {
     }
 
     // Destroy the user's session
-    req.session.destroy( (err) =>{
+    req.session.destroy(function (err) {
       res.redirect('/');
     });
   }

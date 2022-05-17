@@ -29,41 +29,17 @@ module.exports = {
         endDateTime: encodeURIComponent(end)
       })
       // Get just the properties used by the app
-      .select('subject,organizer,start,end,attendees')
+      .select('subject,organizer,start,end')
       // Order by start time
       .orderby('start/dateTime')
       // Get at most 50 results
       .top(50)
       .get();
   },
-  findMeetings: async (msalClient, userId, formData) => {
-    const client = getAuthenticatedClient(msalClient, userId);
-
-    // Build a Graph event
-    const findEvent = {};
-
-    // Add attendees if present
-    if (formData.attendees) {
-      findEvent.attendees = [];
-      formData.attendees.forEach(attendee => {
-        findEvent.attendees.push({
-          type: 'required',
-          emailAddress: {
-            address: attendee
-          }
-        });
-      });
-    }
-
-    // POST /me/findMeetingTimes
-    return  await client
-        .api('/me/findMeetingTimes')
-        .post(findEvent);
-  },
   // </GetCalendarViewSnippet>
 
   // <CreateEventSnippet>
-  createEvent: async (msalClient, userId, formData, timeZone) => {
+  createEvent: async function(msalClient, userId, formData, timeZone) {
     const client = getAuthenticatedClient(msalClient, userId);
 
     // Build a Graph event
@@ -102,6 +78,69 @@ module.exports = {
       .post(newEvent);
   },
   // </CreateEventSnippet>
+  FindEvent: async function(msalClient, userId, formData, timeZone) {
+    const client = getAuthenticatedClient(msalClient, userId);
+
+    // Build a Graph event
+    const findEvent = {
+      "attendees": [
+        {
+          "type": "required",
+          "emailAddress": {
+            "name": "Ameni Telmoudi",
+            "address": "ameni.telmoudi@6lfqx1.onmicrosoft.com"
+          }
+        }
+      ],
+      "locationConstraint": {
+        "isRequired": "false",
+        "suggestLocation": "false",
+        "locations": [
+          {
+            "resolveAvailability": "false",
+            "displayName": "Conf room Hood"
+          }
+        ]
+      },
+      "timeConstraint": {
+        "activityDomain":"work",
+        "timeSlots": [
+          {
+            "start": {
+              "dateTime": "2019-04-16T09:00:00",
+              "timeZone": "Pacific Standard Time"
+            },
+            "end": {
+              "dateTime": "2019-04-18T17:00:00",
+              "timeZone": "Pacific Standard Time"
+            }
+          }
+        ]
+      },
+      "isOrganizerOptional": "false",
+      "meetingDuration": "PT1H",
+      "returnSuggestionReasons": "true",
+      "minimumAttendeePercentage": "100"
+    };
+
+    // Add attendees if present
+    /*if (formData.attendees) {
+      findEvent.attendees = [];
+      formData.attendees.forEach(attendee => {
+        findEvent.attendees.push({
+          type: 'required',
+          emailAddress: {
+            address: attendee
+          }
+        });
+      });
+    }*/
+
+    // POST /me/findMeetingTimes
+    await client
+        .api('/me/findMeetingTimes')
+        .post(findEvent);
+  },
 };
 
 function getAuthenticatedClient(msalClient, userId) {

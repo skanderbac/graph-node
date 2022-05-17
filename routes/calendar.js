@@ -13,7 +13,8 @@ const validator = require('validator');
 
 // <GetRouteSnippet>
 /* GET /calendar */
-router.get('/',async (req, res) => {
+router.get('/',
+  async function(req, res) {
     if (!req.session.userId) {
       // Redirect unauthenticated requests to home page
       res.redirect('/')
@@ -63,7 +64,8 @@ router.get('/',async (req, res) => {
 
 // <GetEventFormSnippet>
 /* GET /calendar/new */
-router.get('/new', (req, res) => {
+router.get('/new',
+  function(req, res) {
     if (!req.session.userId) {
       // Redirect unauthenticated requests to home page
       res.redirect('/')
@@ -98,7 +100,7 @@ router.post('/new', [
   body('ev-start').isISO8601(),
   body('ev-end').isISO8601(),
   body('ev-body').escape()
-], async (req, res) => {
+], async function(req, res) {
   if (!req.session.userId) {
     // Redirect unauthenticated requests to home page
     res.redirect('/')
@@ -155,10 +157,8 @@ router.post('/new', [
 );
 // </PostEventFormSnippet>
 
-
-
-/* GET /calendar/find */
-router.get('/find', (req, res) => {
+router.get('/find',
+    function(req, res) {
       if (!req.session.userId) {
         // Redirect unauthenticated requests to home page
         res.redirect('/')
@@ -169,63 +169,61 @@ router.get('/find', (req, res) => {
     }
 );
 
-/* POST /calendar/find */
+
 router.post('/find', [
       body('ev-attendees').customSanitizer(value => {
         return value.split(';');
+        // Custom validator to make sure each
+        // entry is an email address
       }).custom(value => {
         value.forEach(element => {
           if (!validator.isEmail(element)) {
             throw new Error('Invalid email address');
           }
         });
+
         return true;
       })
-    ], async (req, res) => {
+    ], async function(req, res) {
       if (!req.session.userId) {
+        // Redirect unauthenticated requests to home page
         res.redirect('/')
       } else {
+        // Build an object from the form values
         const formData = {
-          attendees: req.body['ev-attendees']
+          attendees: req.body['ev-attendees'],
         };
-        const formErrors = validationResult(req);
-        if (!formErrors.isEmpty()) {
-          let invalidFields = '';
-          formErrors.errors.forEach(error => {
-            invalidFields += `${error.param.slice(3, error.param.length)},`
-          });
 
-          formData.attendees = formData.attendees.join(';');
-          return res.render('findevent', {
-            findEvent: formData,
-            error: [{ message: `Invalid input in the following fields: ${invalidFields}` }]
-          });
-        }
-
+        // Get the user
         const user = req.app.locals.users[req.session.userId];
 
-        // find events
+        const params = {
+          active: { calendar: true }
+        };
+        // find meetings time
         try {
-          const data= await graph.findMeetings(
+
+          const times = await graph.FindEvent(
               req.app.locals.msalClient,
               req.session.userId,
               formData,
+              user.timeZone
           );
-          return res.render('findevent', {
-            findEvent: formData,
-            events: data.data
-          });
+
+          params.times = times.value;
+
         } catch (error) {
           req.flash('error_msg', {
-            message: 'Could not get data!',
+            message: 'Could not create event',
             debug: JSON.stringify(error, Object.getOwnPropertyNames(error))
           });
         }
 
         // Redirect back to the calendar view
-        return res.redirect('/calendar');
+        //return res.redirect('/calendar/find');
       }
     }
 );
+
 
 module.exports = router;
